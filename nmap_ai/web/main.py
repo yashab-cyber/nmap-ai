@@ -3,6 +3,7 @@ Web interface main module for NMAP-AI
 """
 
 import sys
+import os
 from typing import Optional
 
 def web_main(port: int = 8080, host: str = "localhost", args: Optional[list] = None) -> None:
@@ -17,7 +18,7 @@ def web_main(port: int = 8080, host: str = "localhost", args: Optional[list] = N
     try:
         # Try to import web dependencies
         try:
-            from fastapi import FastAPI, HTTPException
+            from fastapi import FastAPI, HTTPException, Request
             from fastapi.staticfiles import StaticFiles
             from fastapi.templating import Jinja2Templates
             from fastapi.responses import HTMLResponse
@@ -33,24 +34,50 @@ def web_main(port: int = 8080, host: str = "localhost", args: Optional[list] = N
             version="1.0.0"
         )
         
+        # Get the current directory
+        current_dir = os.path.dirname(__file__)
+        static_dir = os.path.join(current_dir, "static")
+        templates_dir = os.path.join(current_dir, "templates")
+        
+        # Mount static files
+        if os.path.exists(static_dir):
+            app.mount("/static", StaticFiles(directory=static_dir), name="static")
+        
+        # Setup templates
+        if os.path.exists(templates_dir):
+            templates = Jinja2Templates(directory=templates_dir)
+        
         # Basic routes
         @app.get("/", response_class=HTMLResponse)
-        async def root():
+        async def root(request: Request):
+            # If templates exist, use them, otherwise fall back to inline HTML
+            if os.path.exists(templates_dir):
+                try:
+                    return templates.TemplateResponse("index.html", {"request": request})
+                except:
+                    pass
+            
             return """
             <!DOCTYPE html>
             <html>
             <head>
                 <title>NMAP-AI Web Interface</title>
+                <link rel="icon" type="image/png" href="/static/nmap-ai.png">
                 <style>
                     body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
                     .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                    h1 { color: #2c3e50; text-align: center; }
+                    .logo { text-align: center; margin-bottom: 20px; }
+                    .logo img { width: 64px; height: 64px; }
+                    h1 { color: #2c3e50; text-align: center; margin-top: 10px; }
                     .status { background: #e8f4fd; padding: 15px; border-radius: 5px; margin: 20px 0; }
                     .api-info { background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0; font-family: monospace; }
                 </style>
             </head>
             <body>
                 <div class="container">
+                    <div class="logo">
+                        <img src="/static/nmap-ai.png" alt="NMAP-AI Logo">
+                    </div>
                     <h1>🚀 NMAP-AI Web Interface</h1>
                     <div class="status">
                         <strong>Status:</strong> Web interface is under development.<br>

@@ -3,6 +3,7 @@ GUI main module for NMAP-AI
 """
 
 import sys
+import os
 from typing import Optional
 
 def gui_main(args: Optional[list] = None) -> None:
@@ -17,6 +18,7 @@ def gui_main(args: Optional[list] = None) -> None:
         try:
             from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
             from PyQt6.QtCore import Qt
+            from PyQt6.QtGui import QPixmap, QIcon
         except ImportError:
             print("GUI dependencies not installed. Please install with: pip install nmap-ai[gui]")
             sys.exit(1)
@@ -29,6 +31,11 @@ def gui_main(args: Optional[list] = None) -> None:
         window.setWindowTitle("NMAP-AI - AI-Powered Network Scanner")
         window.setGeometry(100, 100, 1200, 800)
         
+        # Set window icon if logo exists
+        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "assets", "nmap-ai.png")
+        if os.path.exists(logo_path):
+            window.setWindowIcon(QIcon(logo_path))
+        
         # Create central widget
         central_widget = QWidget()
         window.setCentralWidget(central_widget)
@@ -36,6 +43,17 @@ def gui_main(args: Optional[list] = None) -> None:
         # Create layout
         layout = QVBoxLayout()
         central_widget.setLayout(layout)
+        
+        # Add logo if it exists
+        if os.path.exists(logo_path):
+            logo_label = QLabel()
+            pixmap = QPixmap(logo_path)
+            # Scale the logo to a reasonable size
+            scaled_pixmap = pixmap.scaled(120, 120, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            logo_label.setPixmap(scaled_pixmap)
+            logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            logo_label.setStyleSheet("padding: 10px;")
+            layout.addWidget(logo_label)
         
         # Add welcome message
         welcome_label = QLabel("🚀 NMAP-AI GUI")

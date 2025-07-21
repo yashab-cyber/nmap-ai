@@ -1,0 +1,284 @@
+/* NMAP-AI Main Stylesheet */
+
+:root {
+    --primary-color: #2563eb;
+    --secondary-color: #64748b;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --dark-color: #1e293b;
+    --light-color: #f8fafc;
+    --border-color: #e2e8f0;
+}
+
+/* Global Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--light-color);
+    color: #334155;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+/* Dashboard Cards */
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.stat-card-icon.primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.stat-card-icon.success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.stat-card-icon.warning {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.stat-card-icon.error {
+    background-color: var(--error-color);
+    color: white;
+}
+
+/* Scan Status Indicators */
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge.running {
+    background-color: #dbeafe;
+    color: var(--primary-color);
+}
+
+.status-badge.completed {
+    background-color: #dcfce7;
+    color: var(--success-color);
+}
+
+.status-badge.failed {
+    background-color: #fecaca;
+    color: var(--error-color);
+}
+
+.status-badge.queued {
+    background-color: #fef3c7;
+    color: var(--warning-color);
+}
+
+/* Scan Form Styles */
+.scan-form {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.form-section h4 {
+    color: var(--dark-color);
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+/* Results Table */
+.results-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+}
+
+.results-table .table {
+    margin-bottom: 0;
+}
+
+.results-table .table th {
+    background-color: #f8fafc;
+    border-top: none;
+    color: var(--dark-color);
+    font-weight: 600;
+}
+
+/* Port Status Indicators */
+.port-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.port-status.open {
+    background-color: #dcfce7;
+    color: var(--success-color);
+}
+
+.port-status.closed {
+    background-color: #f3f4f6;
+    color: var(--secondary-color);
+}
+
+.port-status.filtered {
+    background-color: #fef3c7;
+    color: var(--warning-color);
+}
+
+/* Vulnerability Severity */
+.vulnerability-severity {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.vulnerability-severity.critical {
+    background-color: #7c2d12;
+    color: white;
+}
+
+.vulnerability-severity.high {
+    background-color: #fecaca;
+    color: var(--error-color);
+}
+
+.vulnerability-severity.medium {
+    background-color: #fef3c7;
+    color: var(--warning-color);
+}
+
+.vulnerability-severity.low {
+    background-color: #dbeafe;
+    color: var(--primary-color);
+}
+
+.vulnerability-severity.info {
+    background-color: #f3f4f6;
+    color: var(--secondary-color);
+}
+
+/* Progress Bars */
+.scan-progress {
+    height: 8px;
+    border-radius: 4px;
+    background-color: #e2e8f0;
+    overflow: hidden;
+}
+
+.scan-progress .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+    transition: width 0.3s ease;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    .scan-form {
+        padding: 1rem;
+    }
+    
+    .results-table {
+        font-size: 0.875rem;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --light-color: #1e293b;
+        --border-color: #374151;
+    }
+    
+    body {
+        background-color: var(--light-color);
+        color: #e2e8f0;
+    }
+    
+    .stat-card {
+        background: #374151;
+        border-color: var(--border-color);
+        color: #e2e8f0;
+    }
+    
+    .scan-form {
+        background: #374151;
+        border-color: var(--border-color);
+    }
+    
+    .results-table {
+        background: #374151;
+        border-color: var(--border-color);
+    }
+    
+    .results-table .table th {
+        background-color: #4b5563;
+        color: #e2e8f0;
+    }
+}

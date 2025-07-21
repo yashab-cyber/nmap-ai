@@ -1,0 +1,53 @@
+{
+  "sample_networks": [
+    {
+      "name": "home_network",
+      "range": "192.168.1.0/24",
+      "gateway": "192.168.1.1",
+      "description": "Typical home network configuration",
+      "expected_services": ["router", "printer", "smart_devices"],
+      "common_ports": [22, 53, 80, 443, 8080]
+    },
+    {
+      "name": "corporate_network",
+      "range": "10.0.0.0/16",
+      "gateway": "10.0.0.1",
+      "description": "Corporate network with multiple subnets",
+      "expected_services": ["domain_controller", "file_server", "web_server", "database"],
+      "common_ports": [22, 53, 80, 135, 139, 389, 443, 445, 993, 3389]
+    },
+    {
+      "name": "dmz_network",
+      "range": "203.0.113.0/24",
+      "gateway": "203.0.113.1",
+      "description": "DMZ with public-facing services",
+      "expected_services": ["web_server", "mail_server", "dns_server"],
+      "common_ports": [22, 25, 53, 80, 110, 143, 443, 993, 995]
+    }
+  ],
+  "test_targets": [
+    {
+      "ip": "192.168.1.1",
+      "hostname": "router.local",
+      "services": [
+        {"port": 22, "service": "ssh", "version": "OpenSSH 8.0"},
+        {"port": 80, "service": "http", "version": "nginx 1.18"},
+        {"port": 443, "service": "https", "version": "nginx 1.18"}
+      ],
+      "vulnerabilities": []
+    },
+    {
+      "ip": "192.168.1.100",
+      "hostname": "webserver.local",
+      "services": [
+        {"port": 22, "service": "ssh", "version": "OpenSSH 7.4"},
+        {"port": 80, "service": "http", "version": "Apache 2.4.41"},
+        {"port": 443, "service": "https", "version": "Apache 2.4.41"},
+        {"port": 3306, "service": "mysql", "version": "MySQL 8.0.25"}
+      ],
+      "vulnerabilities": [
+        {"cve": "CVE-2021-3156", "severity": "high", "description": "sudo vulnerability"}
+      ]
+    }
+  ]
+}

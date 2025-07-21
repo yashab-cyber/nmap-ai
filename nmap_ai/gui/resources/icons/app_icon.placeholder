@@ -1,0 +1,27 @@
+# NMAP-AI Application Icon
+# This file represents the main application icon placeholder
+# 
+# In a real application, this would contain:
+# - Application logo in various sizes (16x16, 32x32, 48x48, 64x64, 128x128, 256x256)
+# - Icon files in multiple formats (ICO, PNG, SVG)
+# - Platform-specific icon formats (Windows ICO, macOS ICNS, Linux PNG)
+#
+# Icon Design Guidelines:
+# - Simple, recognizable design
+# - Network/scanning themed imagery
+# - Good visibility at small sizes
+# - Professional appearance
+# - Consistent with application branding
+#
+# Suggested Icon Elements:
+# - Network nodes/topology visualization
+# - Magnifying glass or search icon
+# - Shield or security symbol
+# - AI/neural network patterns
+# - Radar or scanning wave patterns
+#
+# File Structure:
+# app_icon.ico     - Windows application icon
+# app_icon.png     - Generic PNG format
+# app_icon.svg     - Scalable vector format
+# app_icon.icns    - macOS application icon

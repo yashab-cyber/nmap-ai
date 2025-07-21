@@ -1,0 +1,73 @@
+# Application settings
+app:
+  name: "NMAP-AI"
+  version: "1.0.0"
+  debug: false
+  data_directory: "data/"
+  
+# Scanning configuration
+scanning:
+  default_timeout: 300
+  max_threads: 20
+  default_ports: "1-1000"
+  timing_template: "-T3"
+  service_detection: true
+  version_detection: true
+  
+# AI settings
+ai:
+  enable_smart_scanning: true
+  enable_vulnerability_detection: true
+  enable_script_generation: true
+  model_path: "data/models/"
+  confidence_threshold: 0.7
+  max_script_generation_time: 60
+  
+# Output settings
+output:
+  default_format: "json"
+  save_raw_results: true
+  results_directory: "results/"
+  report_formats: ["json", "html", "csv"]
+  
+# Logging configuration
+logging:
+  level: "INFO"
+  file: "logs/nmap-ai.log"
+  max_size: "10MB"
+  backup_count: 5
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+# Security settings
+security:
+  encrypt_results: true
+  secure_temp_files: true
+  audit_logging: true
+  max_scan_targets: 1000
+  
+# Network settings
+network:
+  max_scan_range: "/16"
+  dns_resolution: true
+  ping_discovery: true
+  arp_discovery: true
+  
+# GUI settings
+gui:
+  theme: "default"
+  auto_save: true
+  real_time_updates: true
+  max_concurrent_scans: 3
+  
+# Web interface settings
+web:
+  host: "127.0.0.1"
+  port: 8080
+  enable_authentication: true
+  session_timeout: 3600
+  
+# Database settings
+database:
+  vulnerability_db: "data/databases/vulnerabilities.db"
+  cache_db: "data/cache/scan_cache.db"
+  auto_update_interval: 24  # hours

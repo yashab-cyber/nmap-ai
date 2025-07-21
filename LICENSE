@@ -1,0 +1,111 @@
+NMAP-AI ETHICAL USE LICENSE
+
+Copyright (c) 2025 Yashab Alam (ZehraSec)
+Email: yashabalam707@gmail.com
+GitHub: https://github.com/yashab-cyber/nmap-ai
+
+PREAMBLE:
+NMAP-AI is a powerful network security scanning tool designed for ethical security 
+professionals, penetration testers, and network administrators. This license ensures 
+the software is used responsibly and ethically while protecting the intellectual 
+property and supporting the developer's continued work.
+
+GRANT OF LICENSE:
+Permission is hereby granted, free of charge, to any person obtaining a copy of 
+this software and associated documentation files (the "Software"), to use, modify, 
+and distribute the Software, subject to the following conditions and restrictions:
+
+ETHICAL USE REQUIREMENTS:
+1. AUTHORIZED SCANNING ONLY: The Software may only be used to scan networks, systems, 
+   or devices that you own, have explicit written permission to test, or are 
+   authorized to assess as part of legitimate security work.
+
+2. NO MALICIOUS USE: The Software shall not be used for any illegal, malicious, or 
+   harmful activities including but not limited to:
+   - Unauthorized network intrusion or reconnaissance
+   - Criminal hacking or cybercrime activities  
+   - Harassment, stalking, or intimidation
+   - Any violation of local, national, or international laws
+
+3. PROFESSIONAL RESPONSIBILITY: Users must follow responsible disclosure practices 
+   for any vulnerabilities discovered and adhere to professional cybersecurity 
+   ethics standards.
+
+REVERSE ENGINEERING PROHIBITION:
+4. NO REVERSE ENGINEERING: Reverse engineering, decompilation, disassembly, or any 
+   attempt to derive the source code, algorithms, or proprietary methods of the 
+   Software is strictly prohibited without explicit written permission from the 
+   copyright holder.
+
+5. INTELLECTUAL PROPERTY PROTECTION: The Software contains proprietary AI models, 
+   algorithms, and methodologies that are protected intellectual property. 
+   Extraction, replication, or use of these components in other projects is prohibited.
+
+ATTRIBUTION AND DONATION:
+6. ATTRIBUTION REQUIRED: All copies or substantial portions of the Software must 
+   include this copyright notice and license terms.
+
+7. DONATION ENCOURAGEMENT: While not legally required, users are strongly encouraged 
+   to support the developer's continued work through donations. This helps maintain 
+   and improve the Software for the entire security community.
+   
+   Donation Options:
+   - GitHub Sponsors: https://github.com/sponsors/yashab-cyber
+   - PayPal: yashabalam707@gmail.com
+   - Cryptocurrency: Contact developer for wallet addresses
+   - Professional Services: Consulting and custom development available
+
+COMMERCIAL USE:
+8. COMMERCIAL LICENSING: Commercial use, including incorporation into commercial 
+   products or services, requires a separate commercial license. Contact the 
+   developer for commercial licensing terms.
+
+COMPLIANCE AND REPORTING:
+9. VIOLATION REPORTING: Suspected misuse or license violations should be reported 
+   to: license-violations@nmap-ai.org
+
+10. LEGAL COMPLIANCE: Users must comply with all applicable laws and regulations 
+    in their jurisdiction when using the Software.
+
+TERMINATION:
+11. AUTOMATIC TERMINATION: This license automatically terminates if you violate any 
+    of its terms. Upon termination, you must destroy all copies of the Software 
+    in your possession.
+
+WARRANTY DISCLAIMER:
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+PARTICULAR PURPOSE, AND NONINFRINGEMENT. THE SOFTWARE IS A SECURITY TOOL THAT MAY 
+PRODUCE FALSE POSITIVES OR MISS VULNERABILITIES. USERS ARE RESPONSIBLE FOR 
+VALIDATING ALL RESULTS.
+
+LIMITATION OF LIABILITY:
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, 
+OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING 
+FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+THE SOFTWARE. THIS INCLUDES BUT IS NOT LIMITED TO DAMAGES FROM NETWORK DISRUPTION, 
+DATA LOSS, OR LEGAL CONSEQUENCES FROM MISUSE.
+
+INDEMNIFICATION:
+Users agree to indemnify and hold harmless the copyright holder from any claims, 
+damages, or legal actions arising from their use of the Software, particularly 
+any unauthorized or unethical use.
+
+GOVERNING LAW:
+This license shall be governed by and construed in accordance with the laws of 
+the jurisdiction where the copyright holder resides, without regard to conflict 
+of law principles.
+
+CONTACT INFORMATION:
+For questions about this license, commercial licensing, or to report violations:
+- Email: yashabalam707@gmail.com
+- GitHub: https://github.com/yashab-cyber
+- Security Issues: security@nmap-ai.org
+
+ACKNOWLEDGMENT:
+By using this Software, you acknowledge that you have read, understood, and agree 
+to be bound by the terms of this license.
+
+VERSION: 1.0
+EFFECTIVE DATE: July 21, 2025
+LAST UPDATED: July 21, 2025

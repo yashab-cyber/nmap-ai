@@ -1,0 +1,125 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nmap-ai"
+authors = [
+    {name = "Yashab Alam", email = "yashabalam707@gmail.com"},
+]
+description = "AI-Powered Network Scanning & Automation Tool"
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["nmap", "ai", "network", "security", "scanning", "automation"]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Security",
+    "Topic :: System :: Networking",
+    "Topic :: System :: Systems Administration",
+]
+dependencies = [
+    "numpy>=1.21.0",
+    "pandas>=1.3.0",
+    "scikit-learn>=1.0.0",
+    "tensorflow>=2.8.0",
+    "python-nmap>=0.7.1",
+    "fastapi>=0.95.0",
+    "uvicorn>=0.20.0",
+    "click>=8.1.0",
+    "rich>=12.0.0",
+    "requests>=2.28.0",
+    "cryptography>=37.0.0",
+    "matplotlib>=3.5.0",
+    "networkx>=2.8.0",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+gui = [
+    "PyQt6>=6.4.0",
+    "pyqtgraph>=0.13.0",
+]
+web = [
+    "fastapi>=0.95.0",
+    "uvicorn>=0.20.0",
+    "jinja2>=3.1.0",
+]
+dev = [
+    "pytest>=7.1.0",
+    "pytest-cov>=3.0.0",
+    "black>=22.6.0",
+    "flake8>=5.0.0",
+    "mypy>=0.971",
+]
+
+[project.urls]
+Homepage = "https://github.com/yashab-cyber/nmap-ai"
+Documentation = "https://nmap-ai.readthedocs.io/"
+Repository = "https://github.com/yashab-cyber/nmap-ai"
+"Bug Tracker" = "https://github.com/yashab-cyber/nmap-ai/issues"
+Donate = "https://github.com/yashab-cyber/nmap-ai/blob/main/DONATE.md"
+
+[project.scripts]
+nmap-ai = "nmap_ai.cli:main"
+nmap-ai-gui = "nmap_ai.gui.main:main"
+nmap-ai-web = "nmap_ai.web.main:main"
+
+[tool.setuptools]
+packages = ["nmap_ai"]
+
+[tool.setuptools_scm]
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["nmap_ai"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "--cov=nmap_ai --cov-report=html --cov-report=term-missing"

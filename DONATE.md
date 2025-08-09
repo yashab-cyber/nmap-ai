@@ -201,7 +201,7 @@ All payment methods are verified and legitimate. For security concerns:
 ### 👨‍💻 **Connect with Yashab Alam**
 - 💻 **GitHub:** [@yashab-cyber](https://github.com/yashab-cyber)
 - 📸 **Instagram:** [@yashab.alam](https://www.instagram.com/yashab.alam)
-- 💼 **LinkedIn:** [Yashab Alam](https://www.linkedin.com/in/yashabalam)
+- 💼 **LinkedIn:** [Yashab Alam](https://www.linkedin.com/in/yashab-alam)
 
 ## 📝 Alternative Support Methods
 

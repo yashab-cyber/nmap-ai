@@ -384,7 +384,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Email**: yashabalam707@gmail.com
 - **GitHub**: [@yashab-cyber](https://github.com/yashab-cyber)
-- **LinkedIn**: [Yashab Alam](https://www.linkedin.com/in/yashabalam)
+- **LinkedIn**: [Yashab Alam](https://www.linkedin.com/in/yashab-alam)
 - **Company**: [ZehraSec](https://www.zehrasec.com)
 - **WhatsApp**: [Business Channel](https://whatsapp.com/channel/0029Vaoa1GfKLaHlL0Kc8k1q)
 

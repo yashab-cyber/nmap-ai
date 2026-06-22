@@ -1,217 +1,104 @@
-# Examples Directory
+# Examples
 
-This directory contains example scripts, configuration files, and usage demonstrations for NMAP-AI.
+Runnable examples for NMAP-AI. Each script is self-contained and adds the
+project root to `sys.path`, so you can run it straight from a source
+checkout.
 
 ## Contents
 
-### Basic Examples
-- `basic_scan.py` - Simple network scan example
-- `vulnerability_scan.py` - Vulnerability detection example  
-- `ai_script_generation.py` - AI-powered script generation
-- `report_generation.py` - Generating scan reports
+| Example | What it shows |
+|---|---|
+| [`basic_scan.py`](basic_scan.py) | Run a scan with `NmapAIScanner` and print/save the results |
+| [`ai_script_gen.py`](ai_script_gen.py) | Generate NSE (Lua) script scaffolding with `AIScriptGenerator` |
+| [`batch_scanning.py`](batch_scanning.py) | Scan many targets concurrently and write a JSON report |
+| [`plugins/`](plugins/) | A working `ReportPlugin` + how the plugin system loads it (see [`plugins/README.md`](plugins/README.md)) |
 
-### Advanced Examples
-- `custom_plugin.py` - Creating custom scanning plugins
-- `automation_workflow.py` - Automated scanning workflows
-- `integration_example.py` - Integrating with other tools
-- `bulk_scanning.py` - Scanning multiple targets
+## Prerequisites
 
-### Configuration Examples
-- `config_examples/` - Sample configuration files
-- `custom_profiles/` - Custom scanning profiles
-- `ai_model_configs/` - AI model configuration examples
+```bash
+pip install -r requirements.txt
+nmap --version   # nmap must be installed for the scanning examples
+```
 
-### API Examples
-- `rest_api_client.py` - REST API usage examples
-- `web_integration.py` - Web interface integration
-- `cli_automation.py` - CLI automation scripts
+`ai_script_gen.py` does **not** require nmap — it only generates script text.
 
-## Quick Start Examples
+## `basic_scan.py`
 
-### Basic Network Scan
+```bash
+python examples/basic_scan.py --target scanme.nmap.org --ports 22,80
+python examples/basic_scan.py --target 192.168.1.0/24 --no-ai -o scan.json
+```
+
+Options: `--target` (required), `--ports`, `--arguments` (extra raw nmap
+args), `--no-ai` (disable the heuristic engine/optimization),
+`--output/-o` (write the full summary as JSON), `--verbose/-v`.
+
+The equivalent in code:
+
 ```python
 from nmap_ai import NmapAIScanner
 
-# Initialize scanner
 scanner = NmapAIScanner()
+summary = scanner.scan("scanme.nmap.org", ports="22,80")
 
-# Perform basic scan
-results = scanner.scan("192.168.1.1-10", ports="22,80,443")
-
-# Print results
-for host in results:
-    print(f"Host: {host.ip}")
-    for port in host.open_ports:
-        print(f"  Port {port.number}: {port.service}")
+for target, result in summary["results"].items():
+    parsed = result.get("parsed", {})
+    for port in parsed.get("open_ports", []):
+        print(target, port["port"], port.get("name"))
 ```
 
-### AI-Powered Vulnerability Detection
-```python
-from nmap_ai import SmartScanner, VulnerabilityDetector
+## `ai_script_gen.py`
 
-# Smart scanning with AI
-scanner = SmartScanner()
-scan_results = scanner.intelligent_scan("target.example.com")
+```bash
+# Preview several target types (no arguments)
+python examples/ai_script_gen.py
 
-# AI vulnerability analysis
-detector = VulnerabilityDetector()
-vuln_report = detector.analyze_scan_results(scan_results)
-
-# Generate report
-report = detector.export_report(vuln_report, format='html')
-with open('vulnerability_report.html', 'w') as f:
-    f.write(report)
+# Generate a web_server script with HTTP-based checks
+python examples/ai_script_gen.py \
+    --target-type web_server --vuln xss --vuln sql_injection -o web.nse
 ```
 
-### Custom Script Generation
+Options: `--target-type` (`web_server`, `network_device`, `database`,
+`general`), `--vuln` (repeatable; e.g. `xss`, `sql_injection`,
+`weak_authentication`), `--stealth` (`low`/`medium`/`high`),
+`--output/-o`, `--verbose/-v`.
+
+The equivalent in code:
+
 ```python
 from nmap_ai import AIScriptGenerator
 
-# Generate custom nmap script using AI
 generator = AIScriptGenerator()
-
-# Describe what you want to scan for
-description = "Detect vulnerable SSH configurations and weak ciphers"
-
-# Generate custom script
-custom_script = generator.generate_script(
-    target_service="ssh",
-    description=description,
-    security_focus=True
+script = generator.create_script(
+    target_type="web_server",
+    vulnerabilities=["xss", "sql_injection"],
+    stealth_level="medium",
 )
-
-print("Generated Nmap Script:")
-print(custom_script)
+print(script)
 ```
 
-## Running Examples
+> The generated scripts are NSE scaffolding. The `xss`/`sql_injection`
+> checks emit real HTTP probes; other checks are clearly-marked TODO
+> placeholders for the operator to complete.
 
-### Prerequisites
+## `batch_scanning.py`
+
 ```bash
-# Install NMAP-AI
-pip install -r requirements.txt
-
-# Ensure nmap is installed
-nmap --version
+# targets.txt: one host/IP/range per line ('#' comments allowed)
+python examples/batch_scanning.py --targets-file targets.txt -o report.json
 ```
 
-### Basic Usage
-```bash
-# Run basic examples
-python examples/basic_scan.py
+Options: `--targets-file/-f` (required), `--ports/-p`, `--max-concurrent`,
+`--no-ai`, `--output/-o` (JSON report path), `--verbose/-v`.
 
-# Run with custom target
-python examples/basic_scan.py --target 192.168.1.0/24
+## Plugins
 
-# Run vulnerability scan
-python examples/vulnerability_scan.py --target example.com
-```
+See [`plugins/README.md`](plugins/README.md) for the plugin directories,
+how to install a plugin, and a complete `ReportPlugin` example
+([`plugins/markdown_report_plugin.py`](plugins/markdown_report_plugin.py)).
 
-### Advanced Usage
-```bash
-# Custom workflow
-python examples/automation_workflow.py --config examples/config_examples/advanced.yaml
+## Safety
 
-# Bulk scanning
-python examples/bulk_scanning.py --targets targets.txt --output results/
-```
-
-## Configuration Examples
-
-### Basic Configuration (`config_examples/basic.yaml`)
-```yaml
-scanning:
-  default_ports: "1-1000"
-  timeout: 300
-  threads: 10
-
-ai:
-  enable_smart_scanning: true
-  enable_script_generation: true
-  vulnerability_detection: true
-
-output:
-  format: ["json", "html"]
-  directory: "results/"
-  
-logging:
-  level: "INFO"
-  file: "nmap-ai.log"
-```
-
-### Advanced Configuration (`config_examples/advanced.yaml`)
-```yaml
-scanning:
-  profiles:
-    quick: "--top-ports 100 -T4"
-    thorough: "-p- -sV -sC -T3"
-    stealth: "-sS -T1 -f"
-  
-  custom_scripts:
-    - "vuln"
-    - "auth"
-    - "discovery"
-
-ai:
-  models:
-    vulnerability_model: "models/vuln_detector_v2.pkl"
-    script_generator: "models/script_gen_v1.pkl"
-  
-  thresholds:
-    vulnerability_confidence: 0.8
-    script_relevance: 0.7
-
-notifications:
-  email:
-    enabled: true
-    smtp_server: "smtp.example.com"
-    recipients: ["admin@example.com"]
-  
-  slack:
-    enabled: false
-    webhook_url: "https://hooks.slack.com/..."
-```
-
-## Integration Examples
-
-### With Security Tools
-- SIEM integration example
-- Vulnerability scanner integration
-- Threat intelligence platform integration
-
-### With Automation Platforms
-- Ansible playbook integration
-- Jenkins CI/CD integration
-- Python automation frameworks
-
-### With Databases
-- PostgreSQL result storage
-- MongoDB document storage
-- Elasticsearch logging integration
-
-## Contributing Examples
-
-When contributing new examples:
-
-1. Include clear documentation
-2. Add error handling
-3. Use realistic but safe targets
-4. Include configuration files if needed
-5. Test examples thoroughly
-6. Update this README
-
-## Safety Notes
-
-⚠️ **Important**: 
-- Only scan networks you own or have permission to test
-- Use test environments for examples
-- Be mindful of rate limits and network impact
-- Follow responsible disclosure for any vulnerabilities found
-
-## Support
-
-If you need help with examples:
-1. Check the main documentation
-2. Review error messages carefully
-3. Ensure all dependencies are installed
-4. Open an issue on GitHub with example-specific questions
+⚠️ Only scan hosts you own or are explicitly authorized to test. The
+public `scanme.nmap.org` host is provided by the Nmap project for
+testing. Be mindful of rate limits and network impact.

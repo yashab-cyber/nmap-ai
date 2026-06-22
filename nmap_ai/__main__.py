@@ -15,14 +15,14 @@ def main():
     parser.add_argument("--gui", action="store_true", help="Launch GUI interface")
     parser.add_argument("--web", action="store_true", help="Launch web interface")
     parser.add_argument("--port", type=int, default=8080, help="Web server port")
-    
+
     # If no args provided, show help
     if len(sys.argv) == 1:
         parser.print_help()
         return
-    
+
     args, remaining = parser.parse_known_args()
-    
+
     if args.gui:
         gui_main()
     elif args.web:

@@ -22,7 +22,7 @@ from .ai.vulnerability_detector import VulnerabilityDetector
 
 __all__ = [
     "NmapAIScanner",
-    "AIScriptGenerator", 
+    "AIScriptGenerator",
     "SmartScanner",
     "VulnerabilityDetector"
 ]

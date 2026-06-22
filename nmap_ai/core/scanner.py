@@ -4,7 +4,6 @@ Main scanning engine for NMAP-AI
 
 import asyncio
 import nmap
-import logging
 from typing import Dict, List, Optional, Any, Union
 from datetime import datetime
 from pathlib import Path
@@ -15,23 +14,33 @@ from ..utils.logger import get_logger
 from ..utils.validators import validate_target, validate_ports
 from .parser import ResultParser
 from .ai_engine import AIEngine
+from .history import ScanHistoryStore
 
 
 class NmapAIScanner:
     """
     Advanced Nmap scanner with AI capabilities.
     """
-    
-    def __init__(self, ai_enabled: bool = True):
-        """Initialize the scanner."""
+
+    def __init__(self, ai_enabled: bool = True, db_url: Optional[str] = None):
+        """Initialize the scanner.
+
+        Args:
+            ai_enabled: Enable the heuristic AI engine.
+            db_url: SQLite URL for persistent scan history. Defaults to
+                ``config.database.url``.
+        """
         self.config = get_config()
         self.logger = get_logger(__name__)
         self.nm = nmap.PortScanner()
         self.ai_enabled = ai_enabled
         self.ai_engine = AIEngine() if ai_enabled else None
         self.parser = ResultParser()
+        # In-memory history is kept for within-process scan-id generation and
+        # adaptive planning; the store persists across processes.
         self.scan_history: List[Dict[str, Any]] = []
-    
+        self.history_store = ScanHistoryStore(db_url or self.config.database.url)
+
     def scan(
         self,
         targets: Union[str, List[str]],
@@ -42,34 +51,34 @@ class NmapAIScanner:
     ) -> Dict[str, Any]:
         """
         Perform a network scan.
-        
+
         Args:
             targets: Target hosts or networks to scan
             ports: Port specification (e.g., '1-1000', '80,443,22')
             arguments: Additional nmap arguments
             ai_optimize: Whether to use AI optimization
             **kwargs: Additional options
-        
+
         Returns:
             Dictionary containing scan results
         """
         start_time = datetime.now()
-        
+
         # Validate inputs
         if isinstance(targets, str):
             targets = [targets]
-        
+
         for target in targets:
             if not validate_target(target):
                 raise ValueError(f"Invalid target: {target}")
-        
+
         if ports and not validate_ports(ports):
             raise ValueError(f"Invalid port specification: {ports}")
-        
+
         # Set default values
         ports = ports or self.config.scanning.default_ports
         arguments = arguments or ""
-        
+
         # AI optimization
         if ai_optimize and self.ai_enabled:
             optimized_args = self.ai_engine.optimize_scan_arguments(
@@ -77,7 +86,7 @@ class NmapAIScanner:
             )
             arguments = optimized_args
             self.logger.info(f"AI-optimized arguments: {arguments}")
-        
+
         # Perform the scan
         results = {}
         for target in targets:
@@ -88,11 +97,11 @@ class NmapAIScanner:
             except Exception as e:
                 self.logger.error(f"Error scanning {target}: {e}")
                 results[target] = {"error": str(e)}
-        
+
         # Process results with AI
         if self.ai_enabled:
             results = self.ai_engine.enhance_results(results)
-        
+
         # Create scan summary
         end_time = datetime.now()
         scan_summary = {
@@ -106,44 +115,48 @@ class NmapAIScanner:
             "ai_enabled": self.ai_enabled,
             "results": results
         }
-        
-        # Store in history
+
+        # Store in history (in-memory + persistent)
         self.scan_history.append(scan_summary)
-        
+        try:
+            self.history_store.save(scan_summary)
+        except Exception as e:
+            self.logger.warning(f"Could not persist scan history: {e}")
+
         return scan_summary
-    
+
     def _perform_single_scan(
-        self, 
-        target: str, 
-        ports: str, 
+        self,
+        target: str,
+        ports: str,
         arguments: str
     ) -> Dict[str, Any]:
         """Perform a single target scan."""
         try:
             # Build nmap command
             nmap_args = f"-p {ports} {arguments}"
-            
+
             # Execute scan
             self.nm.scan(target, arguments=nmap_args)
-            
+
             # Parse results
             raw_result = self.nm[target] if target in self.nm.all_hosts() else {}
             parsed_result = self.parser.parse_scan_result(raw_result)
-            
+
             return {
                 "status": "success",
                 "raw": raw_result,
                 "parsed": parsed_result,
                 "command": self.nm.command_line()
             }
-            
+
         except Exception as e:
             return {
                 "status": "error",
                 "error": str(e),
                 "command": getattr(self.nm, 'command_line', lambda: "N/A")()
             }
-    
+
     def async_scan(
         self,
         targets: Union[str, List[str]],
@@ -158,7 +171,7 @@ class NmapAIScanner:
         return asyncio.run(
             self._async_scan_impl(targets, ports, arguments, max_concurrent, **kwargs)
         )
-    
+
     async def _async_scan_impl(
         self,
         targets: Union[str, List[str]],
@@ -170,23 +183,23 @@ class NmapAIScanner:
         """Implementation of async scanning."""
         if isinstance(targets, str):
             targets = [targets]
-        
+
         semaphore = asyncio.Semaphore(max_concurrent)
-        
+
         async def scan_target(target: str) -> tuple[str, Dict[str, Any]]:
             async with semaphore:
                 # Run sync scan in thread pool
                 loop = asyncio.get_event_loop()
                 result = await loop.run_in_executor(
-                    None, 
+                    None,
                     lambda: self.scan([target], ports, arguments, **kwargs)
                 )
                 return target, result["results"][target]
-        
+
         # Execute all scans concurrently
         tasks = [scan_target(target) for target in targets]
         scan_results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         # Process results
         results = {}
         for i, result in enumerate(scan_results):
@@ -195,14 +208,14 @@ class NmapAIScanner:
             else:
                 target, target_result = result
                 results[target] = target_result
-        
+
         return {
             "scan_id": self._generate_scan_id(),
             "scan_type": "async",
             "targets": targets,
             "results": results
         }
-    
+
     def generate_ai_script(
         self,
         target_info: Dict[str, Any],
@@ -211,20 +224,20 @@ class NmapAIScanner:
     ) -> str:
         """
         Generate AI-powered Nmap script.
-        
+
         Args:
             target_info: Information about the target
             script_type: Type of script to generate
             requirements: Specific requirements for the script
-        
+
         Returns:
             Generated Nmap script content
         """
         if not self.ai_enabled:
             raise RuntimeError("AI features are disabled")
-        
+
         return self.ai_engine.generate_script(target_info, script_type, requirements)
-    
+
     def smart_scan(
         self,
         target: str,
@@ -233,23 +246,23 @@ class NmapAIScanner:
     ) -> Dict[str, Any]:
         """
         Perform an AI-powered smart scan.
-        
+
         Args:
             target: Target to scan
             scan_profile: Scanning profile (adaptive, fast, thorough, stealth)
             learn_from_previous: Whether to learn from previous scans
-        
+
         Returns:
             Smart scan results with AI insights
         """
         if not self.ai_enabled:
             return self.scan([target])
-        
-        # AI-driven scan planning
+
+        # AI-driven scan planning (learns from persisted history when enabled)
         scan_plan = self.ai_engine.create_scan_plan(
-            target, scan_profile, self.scan_history if learn_from_previous else []
+            target, scan_profile, self.get_scan_history() if learn_from_previous else []
         )
-        
+
         # Execute the planned scan
         result = self.scan(
             targets=[target],
@@ -257,13 +270,13 @@ class NmapAIScanner:
             arguments=scan_plan.get("arguments"),
             ai_optimize=True
         )
-        
+
         # Add AI insights
         result["ai_insights"] = scan_plan.get("insights", {})
         result["scan_profile"] = scan_profile
-        
+
         return result
-    
+
     def batch_scan(
         self,
         targets_file: str,
@@ -272,12 +285,12 @@ class NmapAIScanner:
     ) -> Dict[str, Any]:
         """
         Perform batch scanning from a file of targets.
-        
+
         Args:
             targets_file: Path to file containing targets (one per line)
             output_format: Output format (json, xml, csv)
             output_file: Output file path
-        
+
         Returns:
             Batch scan results
         """
@@ -288,43 +301,52 @@ class NmapAIScanner:
                 targets = [line.strip() for line in f if line.strip()]
         except Exception as e:
             raise ValueError(f"Could not read targets file {targets_file}: {e}")
-        
+
         if not targets:
             raise ValueError("No targets found in file")
-        
+
         # Perform async scan for efficiency
         results = self.async_scan(targets, max_concurrent=self.config.scanning.max_parallel_hosts)
-        
+
         # Save results if output file specified
         if output_file:
             self._save_results(results, output_file, output_format)
-        
+
         return results
-    
+
     def get_scan_history(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
-        """Get scan history."""
-        if limit:
-            return self.scan_history[-limit:]
-        return self.scan_history.copy()
-    
+        """Get scan history from persistent storage (oldest-first)."""
+        try:
+            return self.history_store.get(limit=limit)
+        except Exception as e:
+            self.logger.warning(f"Could not read scan history: {e}")
+            # Fall back to in-memory history for this process.
+            if limit:
+                return self.scan_history[-limit:]
+            return self.scan_history.copy()
+
     def clear_scan_history(self) -> None:
-        """Clear scan history."""
+        """Clear scan history (in-memory and persistent)."""
         self.scan_history.clear()
-    
+        try:
+            self.history_store.clear()
+        except Exception as e:
+            self.logger.warning(f"Could not clear scan history: {e}")
+
     def _generate_scan_id(self) -> str:
         """Generate unique scan ID."""
         return f"scan_{int(datetime.now().timestamp())}_{len(self.scan_history)}"
-    
+
     def _save_results(
-        self, 
-        results: Dict[str, Any], 
-        output_file: str, 
+        self,
+        results: Dict[str, Any],
+        output_file: str,
         format: str
     ) -> None:
         """Save scan results to file."""
         output_path = Path(output_file)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         if format.lower() == "json":
             with open(output_path, 'w') as f:
                 json.dump(results, f, indent=2, default=str)
@@ -336,15 +358,97 @@ class NmapAIScanner:
             self._export_csv(results, output_path)
         else:
             raise ValueError(f"Unsupported output format: {format}")
-        
+
         self.logger.info(f"Results saved to {output_path}")
-    
+
     def _export_xml(self, results: Dict[str, Any], output_path: Path) -> None:
-        """Export results to XML format."""
-        # Implementation for XML export
-        pass
-    
+        """Export a scan summary to an XML document.
+
+        Produces a ``<nmapai_scan>`` root carrying scan metadata, with a
+        ``<host>`` element per target and a ``<port>`` element per open port.
+        """
+        import xml.etree.ElementTree as ET
+
+        root = ET.Element("nmapai_scan")
+        for key in ("scan_id", "start_time", "end_time", "duration",
+                    "ports", "arguments", "ai_enabled"):
+            if key in results:
+                root.set(key, str(results[key]))
+
+        targets = results.get("targets", [])
+        if targets:
+            root.set("targets", ",".join(str(t) for t in targets))
+
+        hosts_elem = ET.SubElement(root, "hosts")
+        for target, result in results.get("results", {}).items():
+            host_elem = ET.SubElement(hosts_elem, "host", {"address": str(target)})
+
+            if "error" in result:
+                host_elem.set("status", "error")
+                ET.SubElement(host_elem, "error").text = str(result.get("error", ""))
+                continue
+
+            parsed = result.get("parsed", {})
+            host_elem.set("status", str(parsed.get("status", result.get("status", ""))))
+
+            ports_elem = ET.SubElement(host_elem, "ports")
+            for port_info in parsed.get("open_ports", []):
+                ET.SubElement(ports_elem, "port", {
+                    "portid": str(port_info.get("port", "")),
+                    "protocol": str(port_info.get("protocol", "")),
+                    "state": str(port_info.get("state", "")),
+                    "service": str(port_info.get("name", "")),
+                    "product": str(port_info.get("product", "")),
+                    "version": str(port_info.get("version", "")),
+                })
+
+        tree = ET.ElementTree(root)
+        if hasattr(ET, "indent"):  # pretty-print on Python 3.9+
+            ET.indent(tree, space="  ")
+        tree.write(output_path, encoding="utf-8", xml_declaration=True)
+
     def _export_csv(self, results: Dict[str, Any], output_path: Path) -> None:
-        """Export results to CSV format."""
-        # Implementation for CSV export
-        pass
+        """Export a scan summary to CSV, one row per open port.
+
+        Targets with no open ports (or that errored) still produce a single
+        row so they are not silently dropped from the report.
+        """
+        import csv
+
+        scan_id = results.get("scan_id", "")
+        fieldnames = [
+            "scan_id", "target", "host_status", "port", "protocol",
+            "service", "product", "version", "port_state", "error",
+        ]
+
+        with open(output_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+
+            for target, result in results.get("results", {}).items():
+                base = {"scan_id": scan_id, "target": target}
+
+                if "error" in result:
+                    writer.writerow({**base, "host_status": "error",
+                                     "error": result.get("error", "")})
+                    continue
+
+                parsed = result.get("parsed", {})
+                host_status = parsed.get("status", result.get("status", ""))
+                open_ports = parsed.get("open_ports", [])
+
+                if not open_ports:
+                    writer.writerow({**base, "host_status": host_status})
+                    continue
+
+                for port_info in open_ports:
+                    writer.writerow({
+                        **base,
+                        "host_status": host_status,
+                        "port": port_info.get("port", ""),
+                        "protocol": port_info.get("protocol", ""),
+                        "service": port_info.get("name", ""),
+                        "product": port_info.get("product", ""),
+                        "version": port_info.get("version", ""),
+                        "port_state": port_info.get("state", ""),
+                    })

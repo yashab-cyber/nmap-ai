@@ -56,7 +56,7 @@ MODEL_METADATA = {
         "training_data_size": 10000,
         "classes": ["critical", "high", "medium", "low", "info"]
     },
-    
+
     "service_classifier": {
         "file": "service_classifier.h5",
         "version": "1.2.1",
@@ -69,7 +69,7 @@ MODEL_METADATA = {
         "training_epochs": 100,
         "batch_size": 32
     },
-    
+
     "anomaly_detector": {
         "file": "anomaly_detector.joblib",
         "version": "1.0.0",

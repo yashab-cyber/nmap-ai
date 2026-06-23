@@ -1,111 +1,91 @@
 """
-Basic example demonstrating NMAP-AI network scanning capabilities.
+Basic example: run a scan with NmapAIScanner and print the results.
+
+Requires nmap to be installed and network access to the target.
+
+    python examples/basic_scan.py --target scanme.nmap.org --ports 22,80
 """
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
-# Add project root to path
+# Allow running this file directly from a source checkout.
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from nmap_ai.core.scanner import NmapAIScanner
-from nmap_ai.utils.logger import get_logger
-from nmap_ai.config import Config
+from nmap_ai.core.scanner import NmapAIScanner  # noqa: E402
+from nmap_ai.utils.logger import get_logger  # noqa: E402
 
 
-def main():
-    """Run basic network scan example."""
+def print_results(summary: dict) -> None:
+    """Pretty-print the parsed results from a scan summary."""
+    print("\n" + "=" * 60)
+    print("SCAN RESULTS")
+    print("=" * 60)
+
+    for target, result in summary.get("results", {}).items():
+        print(f"\nHost: {target}")
+        if "error" in result:
+            print(f"  Error: {result['error']}")
+            continue
+
+        parsed = result.get("parsed", {})
+        print(f"  Status: {parsed.get('status', 'unknown')}")
+
+        open_ports = parsed.get("open_ports", [])
+        if not open_ports:
+            print("  No open ports found.")
+            continue
+
+        print("  Open ports:")
+        for p in open_ports:
+            service = p.get("name", "unknown")
+            banner = " ".join(x for x in (p.get("product"), p.get("version")) if x)
+            extra = f" ({banner})" if banner else ""
+            print(f"    {p.get('port'):>5}/{p.get('protocol', 'tcp')} "
+                  f"{p.get('state', ''):<6} {service}{extra}")
+
+        # AI/heuristic analysis is attached when ai_enabled (the default).
+        analysis = result.get("ai_analysis")
+        if analysis:
+            print(f"  Risk level: {analysis.get('risk_level', 'unknown')}")
+
+
+def main() -> None:
     parser = argparse.ArgumentParser(description="Basic NMAP-AI scan example")
-    parser.add_argument("--target", required=True, help="Target IP or range to scan")
+    parser.add_argument("--target", required=True, help="Target IP, host, or range")
     parser.add_argument("--ports", default="22,80,443", help="Ports to scan")
-    parser.add_argument("--timeout", type=int, default=300, help="Scan timeout")
-    parser.add_argument("--verbose", action="store_true", help="Verbose output")
-    
+    parser.add_argument("--arguments", default="", help="Extra raw nmap arguments")
+    parser.add_argument("--no-ai", action="store_true",
+                        help="Disable the heuristic AI engine / optimization")
+    parser.add_argument("--output", "-o", help="Write the full summary to a JSON file")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose logging")
+
     args = parser.parse_args()
-    
-    # Setup logging
     logger = get_logger("basic_scan", level="DEBUG" if args.verbose else "INFO")
-    
+
     try:
-        # Initialize configuration
-        config = Config()
-        
-        # Create scanner instance
-        logger.info("Initializing NMAP-AI scanner...")
-        scanner = NmapAIScanner(config)
-        
-        # Configure scan parameters
-        scan_options = {
-            'ports': args.ports,
-            'timeout': args.timeout,
-            'service_detection': True,
-            'version_detection': True,
-            'timing_template': 'T3'
-        }
-        
-        logger.info(f"Starting scan of {args.target}")
-        logger.info(f"Scan options: {scan_options}")
-        
-        # Perform the scan
-        results = scanner.scan(args.target, **scan_options)
-        
-        # Display results
-        print("\n" + "="*60)
-        print("SCAN RESULTS")
-        print("="*60)
-        
-        if not results or 'scan' not in results:
-            print("No scan results found.")
-            return
-        
-        scan_data = results['scan']
-        
-        for host_ip, host_data in scan_data.items():
-            if host_ip == 'target':
-                continue
-                
-            print(f"\nHost: {host_ip}")
-            print(f"Status: {host_data.get('status', {}).get('state', 'unknown')}")
-            
-            # Display TCP ports
-            tcp_ports = host_data.get('tcp', {})
-            if tcp_ports:
-                print("\nOpen TCP Ports:")
-                for port, port_data in tcp_ports.items():
-                    state = port_data.get('state', 'unknown')
-                    service = port_data.get('name', 'unknown')
-                    product = port_data.get('product', '')
-                    version = port_data.get('version', '')
-                    
-                    service_info = f"{service}"
-                    if product:
-                        service_info += f" ({product}"
-                        if version:
-                            service_info += f" {version}"
-                        service_info += ")"
-                    
-                    print(f"  {port:>5}/{state:<8} {service_info}")
-            
-            # Display UDP ports if any
-            udp_ports = host_data.get('udp', {})
-            if udp_ports:
-                print("\nOpen UDP Ports:")
-                for port, port_data in udp_ports.items():
-                    state = port_data.get('state', 'unknown')
-                    service = port_data.get('name', 'unknown')
-                    print(f"  {port:>5}/udp/{state:<8} {service}")
-        
-        # Display scan statistics
-        print(f"\nScan completed successfully!")
-        print(f"Scan time: {results.get('runtime', {}).get('elapsed', 'unknown')} seconds")
-        
-        # Save results
-        output_file = f"basic_scan_{args.target.replace('/', '_')}.json"
-        scanner.save_results(results, output_file)
-        logger.info(f"Results saved to {output_file}")
-        
+        scanner = NmapAIScanner(ai_enabled=not args.no_ai)
+        logger.info(f"Scanning {args.target} (ports {args.ports})")
+
+        summary = scanner.scan(
+            args.target,
+            ports=args.ports,
+            arguments=args.arguments,
+            ai_optimize=not args.no_ai,
+        )
+
+        print_results(summary)
+        print(f"\nScan completed in {summary.get('duration', 0):.2f}s")
+
+        if args.output:
+            Path(args.output).write_text(
+                json.dumps(summary, indent=2, default=str), encoding="utf-8"
+            )
+            logger.info(f"Summary written to {args.output}")
+
     except KeyboardInterrupt:
         logger.info("Scan interrupted by user")
         sys.exit(1)

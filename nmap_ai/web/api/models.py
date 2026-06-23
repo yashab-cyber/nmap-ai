@@ -3,7 +3,7 @@ Pydantic models for NMAP-AI web API.
 """
 
 from pydantic import BaseModel, Field, validator
-from typing import Optional, List, Dict, Any, Union
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 from enum import Enum
 
@@ -62,7 +62,7 @@ class ScanRequest(BaseModel):
     ai_scan: Optional[bool] = Field(default=False, description="Use AI-powered scanning")
     vuln_scan: Optional[bool] = Field(default=False, description="Enable vulnerability detection")
     options: Optional[ScanOptions] = Field(default=None, description="Scan options")
-    
+
     @validator('target')
     def validate_target(cls, v):
         """Validate target format."""

@@ -6,41 +6,42 @@ import pytest
 import tempfile
 import shutil
 from pathlib import Path
-import os
 import sys
 
 # Add the project root to Python path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from nmap_ai.config import Config
-from nmap_ai.utils.logger import get_logger
+from nmap_ai.config import NmapAIConfig  # noqa: E402  (after sys.path setup)
+from nmap_ai.utils.logger import get_logger  # noqa: E402
 
 
 @pytest.fixture(scope="session")
 def test_config():
     """Create a test configuration for all tests."""
-    config = Config()
+    config = NmapAIConfig()
+    # data_dir is not a real config field; attach it for fixtures/tests that
+    # want a scratch directory to write databases/artifacts into.
     config.data_dir = tempfile.mkdtemp(prefix="nmap_ai_test_")
     config.log_level = "DEBUG"
     config.debug = True
     return config
 
 
-@pytest.fixture(scope="session")  
+@pytest.fixture(scope="session")
 def temp_data_dir(test_config):
     """Create temporary data directory for tests."""
     data_dir = Path(test_config.data_dir)
     data_dir.mkdir(exist_ok=True)
-    
+
     # Create subdirectories
     (data_dir / "models").mkdir(exist_ok=True)
     (data_dir / "databases").mkdir(exist_ok=True)
     (data_dir / "cache").mkdir(exist_ok=True)
     (data_dir / "logs").mkdir(exist_ok=True)
-    
+
     yield data_dir
-    
+
     # Cleanup after all tests
     shutil.rmtree(str(data_dir), ignore_errors=True)
 
@@ -87,14 +88,14 @@ def sample_scan_results():
                         'version': '7.4'
                     },
                     80: {
-                        'state': 'open', 
+                        'state': 'open',
                         'name': 'http',
                         'product': 'Apache',
                         'version': '2.4.6'
                     },
                     443: {
                         'state': 'open',
-                        'name': 'https', 
+                        'name': 'https',
                         'product': 'Apache',
                         'version': '2.4.6'
                     }
@@ -118,7 +119,7 @@ def mock_vulnerability_data():
         },
         {
             'cve_id': 'CVE-2017-15715',
-            'severity': 'high', 
+            'severity': 'high',
             'score': 7.5,
             'description': 'Apache HTTP Server vulnerability',
             'service': 'http',
@@ -156,19 +157,7 @@ def pytest_runtest_setup(item):
     # Skip network tests if no network access
     if "network" in item.keywords:
         pytest.importorskip("requests")
-        
-    # Skip AI tests if AI dependencies not available
-    if "ai" in item.keywords:
-        try:
-            import tensorflow
-            import torch
-        except ImportError:
-            pytest.skip("AI dependencies not available")
 
-
-# Timeout for slow tests
-def pytest_timeout_set_timer(item, timeout):
-    """Set timeout for tests."""
-    if "slow" in item.keywords:
-        return max(timeout, 300)  # 5 minutes for slow tests
-    return timeout
+    # The engine is heuristic/rule-based — there is no ML stack to gate on.
+    # The "ai" marker is retained for any future ML-backed tests (see roadmap
+    # Phase 3) but currently imposes no extra requirements.

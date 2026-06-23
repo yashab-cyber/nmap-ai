@@ -7,7 +7,7 @@ import time
 import hashlib
 import platform
 import subprocess
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -47,7 +47,7 @@ def format_bytes(bytes_count: int) -> str:
 def get_file_hash(file_path: str, algorithm: str = 'sha256') -> str:
     """Get hash of a file."""
     hash_algo = hashlib.new(algorithm)
-    
+
     try:
         with open(file_path, 'rb') as f:
             for chunk in iter(lambda: f.read(4096), b""):
@@ -87,10 +87,12 @@ def safe_json_save(data: Dict[str, Any], file_path: str) -> bool:
 def is_nmap_installed() -> bool:
     """Check if Nmap is installed and accessible."""
     try:
-        result = subprocess.run(['nmap', '--version'], 
-                              capture_output=True, 
-                              text=True, 
-                              timeout=10)
+        result = subprocess.run(
+            ['nmap', '--version'],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
         return result.returncode == 0
     except (subprocess.TimeoutExpired, FileNotFoundError):
         return False
@@ -99,10 +101,12 @@ def is_nmap_installed() -> bool:
 def get_nmap_version() -> Optional[str]:
     """Get installed Nmap version."""
     try:
-        result = subprocess.run(['nmap', '--version'], 
-                              capture_output=True, 
-                              text=True, 
-                              timeout=10)
+        result = subprocess.run(
+            ['nmap', '--version'],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
         if result.returncode == 0:
             # Extract version from output
             for line in result.stdout.split('\n'):
@@ -116,17 +120,17 @@ def get_nmap_version() -> Optional[str]:
 def parse_port_range(port_spec: str) -> List[int]:
     """Parse port specification into list of ports."""
     ports = []
-    
+
     for part in port_spec.split(','):
         part = part.strip()
-        
+
         if '-' in part:
             start, end = part.split('-', 1)
             start, end = int(start.strip()), int(end.strip())
             ports.extend(range(start, end + 1))
         else:
             ports.append(int(part))
-    
+
     return sorted(list(set(ports)))  # Remove duplicates and sort
 
 
@@ -169,9 +173,9 @@ def clean_old_files(directory: str, max_age_days: int = 7, pattern: str = "*"):
     directory_path = Path(directory)
     if not directory_path.exists():
         return
-    
+
     cutoff_time = datetime.now() - timedelta(days=max_age_days)
-    
+
     for file_path in directory_path.glob(pattern):
         if file_path.is_file():
             file_time = datetime.fromtimestamp(file_path.stat().st_mtime)
@@ -194,7 +198,7 @@ def get_available_memory() -> Optional[int]:
 def is_port_open(host: str, port: int, timeout: float = 3.0) -> bool:
     """Check if a port is open on a host."""
     import socket
-    
+
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(timeout)
@@ -209,13 +213,13 @@ def parse_nmap_xml(xml_content: str) -> Dict[str, Any]:
     try:
         import xml.etree.ElementTree as ET
         root = ET.fromstring(xml_content)
-        
+
         results = {
             'hosts': [],
             'scan_info': {},
             'run_stats': {}
         }
-        
+
         # Parse scan info
         scaninfo = root.find('scaninfo')
         if scaninfo is not None:
@@ -225,7 +229,7 @@ def parse_nmap_xml(xml_content: str) -> Dict[str, Any]:
                 'numservices': scaninfo.get('numservices', ''),
                 'services': scaninfo.get('services', '')
             }
-        
+
         # Parse hosts
         for host in root.findall('host'):
             host_info = {
@@ -234,7 +238,7 @@ def parse_nmap_xml(xml_content: str) -> Dict[str, Any]:
                 'status': {},
                 'ports': []
             }
-            
+
             # Status
             status = host.find('status')
             if status is not None:
@@ -242,14 +246,14 @@ def parse_nmap_xml(xml_content: str) -> Dict[str, Any]:
                     'state': status.get('state', ''),
                     'reason': status.get('reason', '')
                 }
-            
+
             # Addresses
             for address in host.findall('address'):
                 host_info['addresses'].append({
                     'addr': address.get('addr', ''),
                     'addrtype': address.get('addrtype', '')
                 })
-            
+
             # Hostnames
             hostnames = host.find('hostnames')
             if hostnames is not None:
@@ -258,7 +262,7 @@ def parse_nmap_xml(xml_content: str) -> Dict[str, Any]:
                         'name': hostname.get('name', ''),
                         'type': hostname.get('type', '')
                     })
-            
+
             # Ports
             ports = host.find('ports')
             if ports is not None:
@@ -269,7 +273,7 @@ def parse_nmap_xml(xml_content: str) -> Dict[str, Any]:
                         'state': {},
                         'service': {}
                     }
-                    
+
                     # Port state
                     state = port.find('state')
                     if state is not None:
@@ -277,7 +281,7 @@ def parse_nmap_xml(xml_content: str) -> Dict[str, Any]:
                             'state': state.get('state', ''),
                             'reason': state.get('reason', '')
                         }
-                    
+
                     # Service info
                     service = port.find('service')
                     if service is not None:
@@ -287,11 +291,11 @@ def parse_nmap_xml(xml_content: str) -> Dict[str, Any]:
                             'version': service.get('version', ''),
                             'extrainfo': service.get('extrainfo', '')
                         }
-                    
+
                     host_info['ports'].append(port_info)
-            
+
             results['hosts'].append(host_info)
-        
+
         # Parse run stats
         runstats = root.find('runstats')
         if runstats is not None:
@@ -302,9 +306,9 @@ def parse_nmap_xml(xml_content: str) -> Dict[str, Any]:
                     'timestr': finished.get('timestr', ''),
                     'elapsed': finished.get('elapsed', '')
                 }
-        
+
         return results
-        
+
     except Exception as e:
         raise ValueError(f"Could not parse XML content: {e}")
 
@@ -314,11 +318,11 @@ def create_backup(file_path: str) -> str:
     original_path = Path(file_path)
     if not original_path.exists():
         raise FileNotFoundError(f"File {file_path} does not exist")
-    
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_path = original_path.with_suffix(f".backup_{timestamp}{original_path.suffix}")
-    
+
     import shutil
     shutil.copy2(original_path, backup_path)
-    
+
     return str(backup_path)

@@ -9,7 +9,7 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey.svg)
 
-> **🤖 Revolutionizing network scanning with AI-powered automation, intelligent script generation, and advanced port scanning capabilities**
+> **🤖 A heuristic-driven wrapper around Nmap with rule-based scan optimization, NSE script scaffolding, and an extensible plugin system. (The "AI" today is rule-based — a real ML layer is on the roadmap, not in the box.)**
 
 ## 📋 Table of Contents
 
@@ -26,31 +26,25 @@
 
 ## 🌟 Features
 
-### 🤖 AI-Powered Capabilities
-- **Intelligent Script Generation**: AI creates custom Nmap scripts based on target analysis
-- **Smart Port Scanning**: ML-optimized scanning strategies for maximum efficiency
-- **Automated Vulnerability Detection**: AI-driven identification of potential security issues
-- **Adaptive Scanning**: Dynamic adjustment of scan parameters based on target responses
-- **Threat Intelligence Integration**: Real-time threat data incorporation
+### 🤖 Heuristic Scan Intelligence
+- **Template-Driven Script Scaffolding**: Generates Nmap NSE script skeletons from target type + vulnerability hints (Lua boilerplate + test placeholders — *real exploit logic is still on the roadmap*)
+- **Rule-Based Scan Argument Optimization**: Picks Nmap timing, OS-detection, and script-category flags based on target count and naming heuristics
+- **Pattern-Based Vulnerability Hints**: Flags known-risky ports/services (Telnet, FTP, SMB, etc.) and surfaces remediation suggestions from a hardcoded rule table
+- **Adaptive Profiles**: `fast` / `thorough` / `stealth` / `adaptive` profiles that tune ports and timing per scan
 
 ### 🖥️ User Interfaces
-- **Modern GUI**: Cross-platform desktop application with real-time visualization
-- **Advanced CLI**: Powerful command-line interface with scripting support
-- **Web Dashboard**: Browser-based interface for remote management
-- **API Access**: RESTful API for integration with other tools
+- **CLI**: Click-based command-line interface (`scan`, `smart-scan`, `generate-script`, `batch`, `history`) — *working*
+- **GUI**: *not available yet* — `--gui` exits with a pointer to the CLI (desktop UI is on the roadmap)
+- **Web**: FastAPI server with `/health` and `/api/v1/status` endpoints — *scan/results endpoints planned*
 
-### 🔧 Advanced Scanning Features
-- **Multi-threaded Scanning**: Parallel execution for faster results
-- **Custom Script Library**: Extensive collection of specialized Nmap scripts
-- **Network Visualization**: Interactive network topology mapping
-- **Report Generation**: Comprehensive reports in multiple formats (PDF, HTML, JSON, XML)
-- **Scheduled Scanning**: Automated recurring scans with alerting
+### 🔧 Scanning Features
+- **Async Batch Scanning**: Concurrent multi-host scans via `asyncio.Semaphore`
+- **Pluggable Architecture**: `BasePlugin` / `ScannerPlugin` / `ReportPlugin` / `AIPlugin` extension points
+- **JSON Output**: Structured scan results (XML/CSV output is stubbed, on the roadmap)
 
 ### 🛡️ Security & Privacy
-- **Offline AI Models**: No data sent to external services
-- **Encrypted Storage**: Secure storage of scan results and configurations
-- **Audit Logging**: Complete logging of all activities
-- **Role-based Access**: Multi-user support with permission controls
+- **Fully Offline**: No external API calls — all analysis is local
+- **Audit Logging**: Activity logging via the built-in logger
 
 ## 🚀 Installation
 
@@ -58,7 +52,6 @@
 - Python 3.8+
 - Nmap 7.0+
 - Git
-- 4GB RAM minimum (8GB recommended for AI features)
 
 ### Quick Installation
 
@@ -74,9 +67,6 @@ pip install -r requirements.txt
 sudo apt-get install nmap  # Ubuntu/Debian
 sudo yum install nmap      # CentOS/RHEL
 brew install nmap          # macOS
-
-# Initialize AI models
-python -m nmap_ai.setup --init-ai
 
 # Run the application
 python -m nmap_ai
@@ -118,20 +108,15 @@ docker run -it --rm \
 
 ## 💻 Usage
 
-### 🖥️ GUI Mode
+### 🖥️ GUI Mode *(not available yet)*
 
-```bash
-# Launch GUI application
-python -m nmap_ai --gui
-
-# Or use the desktop shortcut after installation
-nmap-ai-gui
-```
+The desktop GUI is on the roadmap. `python -m nmap_ai --gui` currently exits
+with a message pointing you to the CLI below. See [roadmap.md](roadmap.md).
 
 ### ⌨️ CLI Mode
 
 ```bash
-# Basic AI-powered scan
+# Basic Heuristic-driven scan
 nmap-ai --target 192.168.1.0/24 --ai-mode smart
 
 # Generate custom script with AI
@@ -147,17 +132,21 @@ nmap-ai --batch targets.txt --ai-analysis --format pdf
 ### 🌐 Web Dashboard
 
 ```bash
+# Set a secret key (required outside debug mode — the server refuses to
+# start with the built-in default)
+export NMAP_AI_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+
 # Start web server
 nmap-ai --web --port 8080
 
 # Access dashboard at http://localhost:8080
 ```
 
-## 🤖 AI Capabilities
+## 🤖 Heuristic Capabilities
 
-### 🧠 Intelligent Script Generation
+### 🧠 Template-Driven Script Scaffolding
 
-NMAP-AI can automatically generate custom Nmap scripts based on your requirements:
+NMAP-AI generates Nmap NSE script skeletons from a target-type template + vulnerability hints. The output is valid Lua scaffolding — the actual exploit/check logic is left as TODO placeholders for the operator to fill in:
 
 ```python
 from nmap_ai import AIScriptGenerator
@@ -179,21 +168,20 @@ network_script = generator.create_script(
 )
 ```
 
-### 🔍 Smart Scanning Algorithms
+### 🔍 Heuristic Scan Planning
 
 ```python
 from nmap_ai import SmartScanner
 
 scanner = SmartScanner()
 
-# AI-optimized port scanning
+# Rule-based scan-argument optimization
 results = scanner.smart_scan(
     target="192.168.1.0/24",
-    optimization_level="aggressive",
-    ai_model="fast_scan_v2"
+    optimization_level="aggressive"
 )
 
-# Adaptive scanning with learning
+# Adaptive scanning that learns from in-memory scan history
 adaptive_results = scanner.adaptive_scan(
     target="example.com",
     learn_from_previous=True,
@@ -201,73 +189,64 @@ adaptive_results = scanner.adaptive_scan(
 )
 ```
 
-## 📱 GUI Features
+> The `ai_model` argument from prior README versions is removed — there are no model files loaded at runtime. Behavior is driven by the rule tables in `nmap_ai/core/ai_engine.py`.
 
-### Main Dashboard
+## 📱 GUI (Planned)
+
+> The GUI is not implemented yet — `--gui` exits with a pointer to the CLI. The following are roadmap items, not shipping features. See [roadmap.md](roadmap.md) for sequencing.
+
 - Real-time scan progress visualization
 - Interactive network topology maps
-- Live port status indicators
-- Threat level heat maps
-
-### AI Assistant Panel
-- Natural language query interface
-- Automated script suggestions
-- Vulnerability explanation and remediation advice
-- Scan optimization recommendations
-
-### Report Generator
-- Customizable report templates
-- Executive summary generation
-- Technical details with screenshots
-- Export options (PDF, HTML, DOCX)
+- Vulnerability explanation and remediation suggestions
+- Customizable report templates + PDF / HTML / DOCX export
 
 ## ⌨️ CLI Advanced Usage
 
 ### Scripting and Automation
 
 ```bash
-# Create scanning profiles
-nmap-ai --create-profile web_scan --ports 80,443,8080,8443 --scripts http-*
+# Async scan of many targets in parallel
+python -m nmap_ai scan 10.0.0.1 10.0.0.2 10.0.0.3 --async-scan --max-concurrent 20
 
-# Use custom AI models
-nmap-ai --ai-model custom_model.pkl --target 10.0.0.0/8
+# Batch scan from a file of targets, JSON output
+python -m nmap_ai batch targets.txt --output results.json --format json
 
-# Integration with other tools
-nmap-ai --target-from-file ips.txt --output-format json | jq '.vulnerabilities'
+# Smart-scan profiles (adaptive | fast | thorough | stealth)
+python -m nmap_ai smart-scan 192.168.1.0/24 --profile thorough
 
-# Scheduled scanning
-nmap-ai --schedule "0 2 * * *" --profile daily_scan --notify email
+# Pipe results to jq
+python -m nmap_ai scan 10.0.0.1 -o /dev/stdout | jq '.results'
 ```
+
+> Profile creation, custom-model loading, cron-style scheduling, and email notifications shown in earlier README versions are not implemented. See [roadmap.md](roadmap.md).
 
 ### Advanced Configuration
 
 ```yaml
-# config.yml
+# ~/.nmap-ai/config.yml — fields match the dataclasses in nmap_ai/config.py
 ai:
-  models:
-    script_generation: models/script_gen_v3.pkl
-    vulnerability_detection: models/vuln_detect_v2.pkl
-    port_prediction: models/port_pred_v1.pkl
-  
+  confidence_threshold: 0.7   # heuristic risk-flag threshold
+
 scanning:
   default_timeout: 300
   max_parallel_hosts: 50
   retries: 3
-  
+  default_ports: "1-1000"
+  stealth_mode: false
+  timing_template: 3
+
 output:
   default_format: json
   include_raw_nmap: true
   compress_results: true
+  output_directory: results
 
-notifications:
-  email:
-    enabled: true
-    smtp_server: smtp.gmail.com
-    port: 587
-  webhook:
-    enabled: false
-    url: https://your-webhook-url.com
+web:
+  host: localhost
+  port: 8080
 ```
+
+> Notifications (email/webhook), encrypted storage, and role-based access are listed on the roadmap, not implemented today.
 
 ## 🛠️ Plugin System
 
@@ -292,38 +271,22 @@ class CustomVulnScanner(BasePlugin):
 
 ## 🔧 API Reference
 
-### REST API Endpoints
+### REST API Endpoints — Current
 
-```python
-# Start scan
-POST /api/v1/scan
-{
-    "target": "192.168.1.0/24",
-    "options": {
-        "ai_mode": true,
-        "stealth": "medium",
-        "ports": "common"
-    }
-}
+| Endpoint | Status |
+|---|---|
+| `GET /health` | ✅ working |
+| `GET /api/v1/status` | ✅ working |
+| `GET /docs` | ✅ FastAPI auto-docs |
+| `POST /api/v1/scan` | 🚧 returns 501 — planned |
+| `GET /api/v1/results/{scan_id}` | 🚧 returns 501 — planned |
 
-# Get scan results
-GET /api/v1/scan/{scan_id}
-
-# Generate AI script
-POST /api/v1/ai/generate-script
-{
-    "target_type": "web_server",
-    "requirements": ["vulnerability_scan", "service_detection"]
-}
-
-# List AI models
-GET /api/v1/ai/models
-```
+See [roadmap.md](roadmap.md) Phase 1 for the plan to wire the scan endpoints up against `NmapAIScanner`.
 
 ## 🎯 Use Cases
 
 ### 🏢 Enterprise Security
-- **Automated Asset Discovery**: AI-powered identification of network assets
+- **Automated Asset Discovery**: Heuristic-driven identification of network assets
 - **Compliance Scanning**: Automated checks for security compliance
 - **Threat Hunting**: Proactive identification of potential threats
 - **Vulnerability Management**: Continuous vulnerability assessment
@@ -335,7 +298,7 @@ GET /api/v1/ai/models
 - **Network Analysis**: Deep network behavior analysis
 
 ### 🔒 Penetration Testing
-- **Reconnaissance Automation**: AI-assisted information gathering
+- **Reconnaissance Automation**: Rule-based information gathering
 - **Custom Exploit Development**: Script generation for specific targets
 - **Stealth Scanning**: Advanced evasion techniques
 - **Report Generation**: Professional penetration testing reports
@@ -356,7 +319,7 @@ GET /api/v1/ai/models
 
 ### Version 2.0 (Q1 2026)
 - [ ] Distributed scanning architecture
-- [ ] Advanced AI-powered exploit generation
+- [ ] Advanced Heuristic-driven exploit generation
 - [ ] Blockchain-based result verification
 - [ ] Quantum-resistant scanning protocols
 
